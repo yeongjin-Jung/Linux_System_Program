@@ -9,8 +9,11 @@
 #include <sys/ipc.h>	 
 #include <sys/msg.h>	 // msgget(), msgsnd(), msgrcv(), msgctl()
 
+
+//msg.h 메시지 큐 = 두개(혹은 이상)프로세스들이 일반 시스템 메시지 큐의 접근을 통해 정보를 교환 할 수 있다.
+
 typedef struct {
-	long msgType;
+	long msgType;  
 	long long resultValue;
 } Value;
 
@@ -28,7 +31,12 @@ long long adder(int start, int end)
 	return result;
 }
 
-
+/*
+timeval 구조체
+long tv_sec; 초
+long tv_usec; 마이크로초
+*/
+//UTCtime = 
 void disp_runtime(struct timeval UTCtime_s, struct timeval UTCtime_e)
 {
 	struct timeval UTCtime_r;
@@ -49,13 +57,13 @@ void disp_runtime(struct timeval UTCtime_s, struct timeval UTCtime_e)
 int main(int argc, char *argv[])
 {
 	int procNum;
-	pid_t pid;
-	int endValue;
+	pid_t pid;   //pid_t : 프로세스 번호(pid)를 저장하는 타입(t)라는 의미
+	int endValue; 
 	long long result;
 	int msqid;
 	clock_t startTime, endTime;
 	struct timeval UTCtime_s, UTCtime_e;
-	Value value;
+	Value value; //Value 구조체 value 변수 선언
 	
 	if(argc<2)
 	{
@@ -63,11 +71,11 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	endValue = atoi(argv[1]);
-	printf("endValue=%d\n",endValue);
+	endValue = atoi(argv[1]);      // atoi:문자 스트링을 정수로 변환
+	printf("endValue=%d\n",endValue);   //최종 숫자값
 
 	procNum = atoi(argv[2]);
-	printf("procNum=%d\n",procNum);
+	printf("procNum=%d\n",procNum);     //프로세스 갯수
 
 	switch(procNum)
 	{
@@ -84,8 +92,12 @@ int main(int argc, char *argv[])
 				break;
 				
 		case 2: startTime = clock();
-		        // create message queue
-				if (( msqid = msgget( (key_t)1234, IPC_CREAT | 0666))==-1)
+		        // create message queue 새로운 메시지 큐 생성 
+			// 메시지 큐 : 프로세스 또는 프로그램 인스턴스가 데이터를 서로 교환할때 사용하는 방법. 
+				if (( msqid = msgget( (key_t)1234, IPC_CREAT | 0666))==-1) 
+					//msqid : 메시지 큐 식별자 , key : 시스템에서 식별하는 메시지 큐 변호
+					//IPC_CREAT : key에 해당하는 큐가 있다면 큐의 식별자를 반환하며, 없으면 생성합니다.
+					//IPC_EXCL : key에 해당하는 큐가 없다면 생성하지만 있다면 -1을 반환하고 복귀합니다.
    				{
       				perror( "Error : msgget()");
       				return -1;
@@ -99,6 +111,8 @@ int main(int argc, char *argv[])
 				{
 					value.resultValue = adder(1, endValue>>1);	
 				    if (msgsnd( msqid, &value, sizeof(value) - sizeof(long), 0)==-1)
+					    //msgsnd는 message queue로 데이터를 전송하는 함수
+					    //
                     {
                         perror( "Error : msgsnd()");
                         return -2;
